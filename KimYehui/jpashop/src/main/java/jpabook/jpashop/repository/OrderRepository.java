@@ -1,5 +1,6 @@
 package jpabook.jpashop.repository;
 
+import jpabook.jpashop.api.OrderSimpleApiController;
 import jpabook.jpashop.domain.Order;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.weaver.ast.Or;
@@ -73,7 +74,7 @@ public class OrderRepository {
         if (orderSearch.getOrderStatus() != null){
             query = query.setParameter("status", orderSearch.getOrderStatus());
         }
-        if (org.springframework.util.StringUtils.hasText(orderSearch.getMemberName()){
+        if (org.springframework.util.StringUtils.hasText(orderSearch.getMemberName())){
             query = query.setParameter("name", orderSearch.getMemberName());
         }
 
@@ -107,6 +108,23 @@ public class OrderRepository {
         cq.where(cb.and(criteria.toArray(new Predicate[criteria.size()])));
         TypedQuery<Order> query = em.createQuery(cq).setMaxResults(1000);
         return query.getResultList();
+    }
+
+    public List<Order> findAllWithMemberDelivery() {
+        return em.createQuery(
+                "select o from Order o" +
+                " join fetch o.member m" +
+                " join fetch o.delivery d", Order.class
+        ).getResultList();
+    }
+
+    public List<OrderSimpleQueryDto> findOrderDtos() {
+        em.createQuery(
+                "select new jpabook.jpashop.repository.OrderSimpleQueryDto(" +
+                        "o.id, m.name, o.orderDate, o.status, d.address) from Order o" +
+                " join o.member m" +
+                " join o.deliver d", OrderSimpleQueryDto.class)
+                .getResultList();
     }
     /**
      * [방법3] Query DSL
